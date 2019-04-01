@@ -74,7 +74,6 @@ Execute(The -x option should be added when the version is new enough):
   " We should cache the version check
   WithChainResults []
   AssertLinter 'shellcheck', [
-  \ '',
   \ b:prefix . ale#Escape('shellcheck') . ' -x' . b:suffix,
   \]
 
@@ -102,6 +101,5 @@ Execute(The version check shouldn't be run again for old versions):
   \ b:prefix . ale#Escape('shellcheck') . b:suffix,
   \]
   AssertLinter 'shellcheck', [
-  \ '',
   \ b:prefix . ale#Escape('shellcheck') . b:suffix,
   \]

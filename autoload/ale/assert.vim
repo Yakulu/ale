@@ -58,12 +58,28 @@ function! ale#assert#Linter(expected_executable, expected_command) abort
             endfor
         endif
     else
-        let l:command = ale#linter#GetCommand(l:buffer, l:linter)
+        let l:command = []
+        let l:chain_index = 0
+        let l:result = ale#linter#GetCommand(l:buffer, l:linter)
 
-        while ale#command#IsDeferred(l:command)
-            call ale#test#FlushJobs()
-            let l:command = l:command.value
+        " Grab the commands from the deferred objects, and pass some results
+        " to them.
+        while ale#command#IsDeferred(l:result)
+            call add(l:command, l:result.command)
+            let l:Callback = g:ale_run_synchronously_callbacks[0]
+            let l:mock_output = get(s:chain_results, l:chain_index, [])
+            call l:Callback(0, l:mock_output)
+            unlet g:ale_run_synchronously_callbacks
+
+            let l:chain_index += 1
+            let l:result = l:result.value
         endwhile
+
+        call add(l:command, l:result)
+
+        if type(a:expected_command) is v:t_string
+            let l:command = l:command[-1]
+        endif
     endif
 
     if type(l:command) is v:t_string
@@ -179,10 +195,18 @@ function! ale#assert#SetUpLinterTest(filetype, name) abort
     endif
 
     call ale#assert#SetUpLinterTestCommands()
+
+    Save g:ale_run_synchronously
+    Save g:ale_run_synchronously_emulate_commands
+    Save g:ale_run_synchronously_command_results
+
+    let g:ale_run_synchronously = 1
+    let g:ale_run_synchronously_emulate_commands = 1
 endfunction
 
 function! ale#assert#TearDownLinterTest() abort
     unlet! g:ale_create_dummy_temporary_file
+    unlet! g:ale_run_synchronously_callbacks
     let s:chain_results = []
 
     if exists(':WithChainResults')

@@ -45,6 +45,5 @@ Execute(The reek version check should be cached):
 
   WithChainResults []
   AssertLinter 'reek', [
-  \ '',
   \ ale#Escape('reek') . ' -f json --no-progress --no-color --force-exclusion --stdin-filename %s',
   \]
